@@ -9,7 +9,16 @@ class RhythmDetector:
 
     def autocorrelation(self, y: np.ndarray) -> np.ndarray:
         y = y - np.mean(y)
-        corr = np.correlate(y, y, mode='full')
+        # Downsample for faster computation if array is very long
+        # (rhythm detection doesn't need full sample rate)
+        max_samples = 100000  # ~4.5 seconds at 22050 Hz
+        if len(y) > max_samples:
+            step = len(y) // max_samples
+            y = y[::step]
+        
+        # Use FFT-based correlation for O(n log n) instead of O(n²)
+        from scipy import signal
+        corr = signal.correlate(y, y, mode='full', method='fft')
         corr = corr[len(corr)//2:]  # keep positive lags only
         if corr[0] != 0:
             corr = corr / corr[0]

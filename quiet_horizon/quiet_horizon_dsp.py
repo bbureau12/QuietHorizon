@@ -11,12 +11,13 @@ class QuietHorizonDSP:
         self.flat = FlatnessFilter()    # subsystem 3
 
     def analyze(self, path):
-        features = self.engine.extract_all(path)  # load and compute once
+        # Get the shared audio + spectral features
+        features = self.engine.extract_all(path)
 
-        # Each subsystem receives the shared data
-        freq_result = self.freq.analyze(features["y"], features["sr"], features["S"])
-        rhythm_result = self.rhythm.analyze(features["y"], features["sr"])
-        flat_result = self.flat.analyze(features["y"], features["sr"], features["S"])
+        # Each subsystem now takes the whole feature dict
+        freq_result = self.freq.analyze(features)
+        rhythm_result = self.rhythm.analyze(features)
+        flat_result = self.flat.analyze(features)
 
         return {
             "path": path,

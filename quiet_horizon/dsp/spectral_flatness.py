@@ -1,4 +1,3 @@
-# dsp/flatness.py
 from dataclasses import dataclass
 import numpy as np
 import librosa
@@ -6,7 +5,7 @@ import librosa
 @dataclass
 class FlatnessThresholds:
     mean_flatness: float = 0.45
-    high_frame_frac: float = 0.3
+    high_frame_frac: float = 0.3   # note the name
 
 class FlatnessFilter:
     def __init__(self, thresholds: FlatnessThresholds | None = None):
@@ -16,7 +15,6 @@ class FlatnessFilter:
         """
         S: magnitude or power spectrogram (freq_bins x frames)
         """
-        # librosa expects shape (freqs, frames)
         flat = librosa.feature.spectral_flatness(S=S)[0]  # (frames,)
 
         mean_flatness = float(np.mean(flat))
@@ -34,7 +32,8 @@ class FlatnessFilter:
 
         is_noise_like = (
             stats["mean_flatness"] > self.thresholds.mean_flatness
-            or stats["high_flat_frame_frac"] > self.thresholds.high_flat_frame_frac
+            or stats["high_flat_frame_frac"] > self.thresholds.high_frame_frac
+            #                        ^ here                 ^ and here
         )
 
         return {
