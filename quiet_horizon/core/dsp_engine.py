@@ -1,4 +1,3 @@
-# dsp/engine.py
 from dataclasses import dataclass
 import numpy as np
 import librosa
@@ -15,6 +14,15 @@ class DSPEngine:
 
     def extract_all(self, path: str) -> dict:
         y, sr = librosa.load(path, sr=self.config.sr, mono=True)
+
+        # 🚫 Guard: too-short clips → don't run STFT at all
+        if len(y) < self.config.n_fft:
+            return {
+                "path": path,
+                "y": y,
+                "sr": sr,
+                "too_short": True,
+            }
 
         stft = librosa.stft(
             y,
@@ -34,4 +42,5 @@ class DSPEngine:
             "stft": stft,
             "S": S,
             "freqs": freqs,
+            "too_short": False,
         }
