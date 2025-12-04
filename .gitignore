@@ -210,3 +210,4 @@ dataset_cnn/
 # Large model files (use Git LFS or keep local only)
 *.pkl
 models/*.pkl
+*.png
