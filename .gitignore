@@ -211,3 +211,4 @@ dataset_cnn/
 *.pkl
 models/*.pkl
 *.png
+*.keras
