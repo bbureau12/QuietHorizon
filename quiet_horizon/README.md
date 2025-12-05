@@ -39,10 +39,9 @@ QuietHorizon uses a binary CNN classifier trained on mel-spectrogram images gene
 - Pure natural ambience (rain, thunder)
 
 **Anthropogenic (positive class)**
-- Vehicle noise (road, boat, plane)
-- Home improvement noise (drills, saws)
+- Vehicle noise (road, plane)
+- Construction noise (drills, saws)
 - Mechanical systems
-- Wind chimes and other human-origin acoustic patterns
 - Augmented audio blended with nature at 25% for robustness
 
 ## 🏗️ CNN Architecture
