@@ -1,6 +1,7 @@
 # inference_cnn.py
 import argparse
 import os
+import sys
 from typing import Dict
 
 import cnn_generation.audio_standardizer as audio_standardizer
@@ -132,6 +133,23 @@ def predict_image(
 
 
 def main():
+    # ---------- DEBUG MODE: no CLI args ----------
+    if len(sys.argv) == 1:
+        print("Running in DEBUG mode...\n")
+
+        model_path = "models/quiet_horizon_cnn_tf.h5"
+        audio_path = r"D:\Projects\QuietHorizon\quiet_horizon\dataset_cnn\anthro\home_improvement\240916_0319_19_09_59.wav"
+        threshold = 0.5
+
+        model = load_model(model_path)
+        result = predict_audio(model, audio_path, threshold)
+
+        print(f"Input ({result['mode']}): {result['input_path']}")
+        print(f"  P(nature) = {result['prob_nature']:.3f}")
+        print(f"  P(anthro) = {result['prob_anthro']:.3f}")
+        print(f"  Threshold = {result['threshold']:.2f}")
+        print(f"  → Predicted label: {result['pred_label'].upper()}")
+        return
     parser = argparse.ArgumentParser(
         description="Run QuietHorizon CNN inference on a spectrogram image."
     )
