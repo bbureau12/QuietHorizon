@@ -62,7 +62,7 @@ This yields a strong, generalizable classifier while maintaining a small on-disk
 
 The trained CNN is available here:
 
-👉 **Hugging Face**: https://huggingface.co/bbureau12/QuietHorizon-CNN
+👉 **Hugging Face**: https://huggingface.co/bbureau12/QuietHorizon
 
 Load directly via:
 
@@ -71,7 +71,7 @@ from huggingface_hub import hf_hub_download
 import tensorflow as tf
 
 model_path = hf_hub_download(
-    repo_id="bbureau12/QuietHorizon-CNN",
+    repo_id="bbureau12/QuietHorizon",
     filename="quiet_horizon_cnn.keras"
 )
 
