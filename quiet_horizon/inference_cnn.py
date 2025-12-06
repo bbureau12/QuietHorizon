@@ -10,6 +10,7 @@ import cv2
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
+from tensorflow.keras import layers
 
 # Must match training setup
 IMG_SIZE = (128, 128)
@@ -49,15 +50,6 @@ def load_melspec_from_audio(path: str) -> np.ndarray:
     # Add batch dimension
     return np.expand_dims(img_rgb, axis=0)
 
-
-def load_model(model_path: str) -> keras.Model:
-    """
-    Load the trained QuietHorizon CNN model.
-    """
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Model file not found: {model_path}")
-    model = keras.models.load_model(model_path)
-    return model
 
 def predict_audio(model: keras.Model, audio_path: str, threshold: float = 0.5):
     x = load_melspec_from_audio(audio_path)
@@ -132,37 +124,96 @@ def predict_image(
     }
 
 
+IMG_SIZE = (128, 128)
+CLASS_NAMES = ["anthro", "nature"]  # 0=anthro, 1=nature
+
+def build_model() -> tf.keras.Model:
+    """
+    Rebuild the CNN architecture exactly as in training_cnn.
+    """
+    input_shape = IMG_SIZE + (3,)
+
+    model = keras.Sequential([
+        layers.Rescaling(1./255, input_shape=input_shape),
+
+        layers.Conv2D(32, (3, 3), activation="relu", padding="same"),
+        layers.MaxPooling2D((2, 2)),
+
+        layers.Conv2D(64, (3, 3), activation="relu", padding="same"),
+        layers.MaxPooling2D((2, 2)),
+
+        layers.Conv2D(128, (3, 3), activation="relu", padding="same"),
+        layers.MaxPooling2D((2, 2)),
+
+        layers.Conv2D(256, (3, 3), activation="relu", padding="same"),
+        layers.MaxPooling2D((2, 2)),
+
+        layers.GlobalAveragePooling2D(),
+        layers.Dropout(0.3),
+        layers.Dense(128, activation="relu"),
+        layers.Dropout(0.3),
+        layers.Dense(1, activation="sigmoid"),
+    ])
+
+    # Compile isn't strictly needed for inference, but it's harmless
+    model.compile(
+        optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+        loss="binary_crossentropy",
+        metrics=[
+            "accuracy",
+            keras.metrics.AUC(name="auc"),
+            keras.metrics.Precision(name="precision"),
+            keras.metrics.Recall(name="recall"),
+        ],
+    )
+
+    return model
+
+
+def load_model(weights_path: str) -> tf.keras.Model:
+    """
+    Build a fresh model and load weights from .weights.h5.
+    """
+    if not os.path.exists(weights_path):
+        raise FileNotFoundError(f"Weight file not found: {weights_path}")
+
+    model = build_model()
+    model.load_weights(weights_path)
+    return model
+
 def main():
-    # ---------- DEBUG MODE: no CLI args ----------
-    if len(sys.argv) == 1:
-        print("Running in DEBUG mode...\n")
+    # ------------------------------------
+    # DEBUG MODE: run without argparse
+    # ------------------------------------
+    # if len(sys.argv) == 1:   # No command-line args → debug mode
+    #     print("Running in DEBUG mode...\n")
 
-        model_path = "models/quiet_horizon_cnn_tf.h5"
-        audio_path = r"D:\Projects\QuietHorizon\quiet_horizon\dataset_cnn\anthro\home_improvement\240916_0319_19_09_59.wav"
-        threshold = 0.5
+    #     model_path = "models/quiet_horizon_cnn.weights.h5"
+    #     audio_path = r"D:\Projects\QuietHorizon\quiet_horizon\dataset_cnn\anthro\home_improvement\240916_0319_19_09_59.wav"
+    #     threshold = 0.5
 
-        model = load_model(model_path)
-        result = predict_audio(model, audio_path, threshold)
+    #     model = load_model(model_path)
+    #     result = predict_audio(model, audio_path, threshold)
 
-        print(f"Input ({result['mode']}): {result['input_path']}")
-        print(f"  P(nature) = {result['prob_nature']:.3f}")
-        print(f"  P(anthro) = {result['prob_anthro']:.3f}")
-        print(f"  Threshold = {result['threshold']:.2f}")
-        print(f"  → Predicted label: {result['pred_label'].upper()}")
-        return
+    #     print(f"Input (audio): {result['audio_path']}")
+    #     print(f"  P(nature) = {result['prob_nature']:.3f}")
+    #     print(f"  P(anthro) = {result['prob_anthro']:.3f}")
+    #     print(f"  Predicted label = {result['pred_label'].upper()}")
+    #     return
+
     parser = argparse.ArgumentParser(
-        description="Run QuietHorizon CNN inference on a spectrogram image."
+        description="Run QuietHorizon CNN inference on a spectrogram image or audio file."
     )
     parser.add_argument(
-        "image_path",
+        "input_path",
         type=str,
-        help="Path to input spectrogram image (PNG/JPG).",
+        help="Path to input spectrogram image OR audio file.",
     )
     parser.add_argument(
         "--model-path",
         type=str,
-        default="models/quiet_horizon_cnn.keras",
-        help="Path to the trained .keras model file.",
+        default="models/quiet_horizon_cnn.weights.h5",
+        help="Path to the trained weights file (.weights.h5).",
     )
     parser.add_argument(
         "--threshold",
@@ -170,34 +221,27 @@ def main():
         default=0.5,
         help="Decision threshold on P(nature). Default: 0.5",
     )
-
-    parser.add_argument(
-    "input_path",
-    type=str,
-    help="Path to input spectrogram image OR audio file."
-    )
     parser.add_argument(
         "--audio",
         action="store_true",
-        help="Interpret input as audio instead of image."
+        help="Interpret input as audio instead of image.",
     )
-
 
     args = parser.parse_args()
 
     model = load_model(args.model_path)
+
     if args.audio:
-     result = predict_audio(model, args.input_path, threshold=args.threshold)
+        result = predict_audio(model, args.input_path, threshold=args.threshold)
+        print(f"\nInput (audio): {result['audio_path']}")
     else:
-     result = predict_image(model, args.input_path, threshold=args.threshold)
+        result = predict_image(model, args.input_path, threshold=args.threshold)
+        print(f"\nInput (image): {result['image_path']}")
 
-
-    print(f"\nImage: {result['image_path']}")
     print(f"  P(nature) = {result['prob_nature']:.3f}")
     print(f"  P(anthro) = {result['prob_anthro']:.3f}")
-    print(f"  Threshold = {result['threshold']:.2f}")
+    print(f"  Threshold = {args.threshold:.2f}")
     print(f"  → Predicted label: {result['pred_label'].upper()}")
-
 
 if __name__ == "__main__":
     main()
