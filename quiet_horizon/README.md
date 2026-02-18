@@ -44,7 +44,88 @@ QuietHorizon uses a binary CNN classifier trained on mel-spectrogram images gene
 - Mechanical systems
 - Augmented audio blended with nature at 25% for robustness
 
-## 🏗️ CNN Architecture
+## 🏗️ System Architecture
+
+```mermaid
+graph TB
+    subgraph "Data Sources"
+        A1[Nature Audio<br/>Birds, Frogs, Mammals<br/>Rain, Thunder]
+        A2[Anthropogenic Audio<br/>Vehicles, Construction<br/>Machinery]
+    end
+
+    subgraph "Preprocessing Pipeline"
+        B1[Audio Files<br/>.wav format]
+        B2[Audio Augmentation<br/>25% blend with nature]
+        B3[Mel-Spectrogram<br/>Generation<br/>128×128 RGB]
+        B4[Dataset<br/>~20,000 spectrograms]
+    end
+
+    subgraph "CNN Model Architecture"
+        C1[Input Layer<br/>128×128×3]
+        C2[Rescaling]
+        C3[Conv2D 32<br/>+ MaxPool]
+        C4[Conv2D 64<br/>+ MaxPool]
+        C5[Conv2D 128<br/>+ MaxPool]
+        C6[Conv2D 256<br/>+ MaxPool]
+        C7[Global Average<br/>Pooling]
+        C8[Dense 128<br/>+ Dropout]
+        C9[Dense 1<br/>Sigmoid]
+    end
+
+    subgraph "Training & Deployment"
+        D1[Training Pipeline<br/>cnn_trainer.ipynb]
+        D2[Trained Model<br/>~4 MB]
+        D3[Hugging Face<br/>Model Hub]
+    end
+
+    subgraph "Inference"
+        E1[New Audio<br/>or Spectrogram]
+        E2[Inference Engine<br/>inference_cnn.py]
+        E3[Binary Classification<br/>Nature vs Anthro]
+        E4[Confidence Score<br/>P nature / P anthro]
+    end
+
+    subgraph "Optional DSP Engine"
+        F1[DSP Features<br/>Spectral Flatness<br/>Rhythm, Frequency]
+        F2[Legacy Filter<br/>Optional]
+    end
+
+    A1 --> B1
+    A2 --> B1
+    B1 --> B2
+    B2 --> B3
+    B3 --> B4
+    
+    B4 --> D1
+    D1 --> C1
+    C1 --> C2
+    C2 --> C3
+    C3 --> C4
+    C4 --> C5
+    C5 --> C6
+    C6 --> C7
+    C7 --> C8
+    C8 --> C9
+    C9 --> D2
+    
+    D2 --> D3
+    D3 -.Download.-> E2
+    
+    E1 --> E2
+    E2 --> E3
+    E3 --> E4
+    
+    B1 -.Optional.-> F1
+    F1 -.Optional.-> F2
+
+    style C1 fill:#e1f5ff
+    style C9 fill:#ffe1e1
+    style D2 fill:#d4edda
+    style D3 fill:#fff3cd
+    style E4 fill:#d1ecf1
+```
+
+### CNN Architecture Details
 
 A compact but effective model:
 
@@ -83,33 +164,67 @@ model = tf.keras.models.load_model(model_path)
 ```
 QuietHorizon/
 │
-├── cnn_training/
-│   ├── train_cnn.ipynb
-│   ├── train_cnn.py
-│   └── spectrogram_generator.py
+├── frontend/                     # 🆕 Streamlit web application
+│   ├── app.py                   # Main Streamlit app
+│   ├── config.py                # Configuration settings
+│   ├── requirements.txt
+│   ├── utils/                   # Utility modules
+│   │   ├── model_loader.py     # Model loading & caching
+│   │   ├── audio_processor.py  # Audio processing pipeline
+│   │   └── visualization.py    # Plotting utilities
+│   └── components/              # UI components
+│       ├── upload.py
+│       ├── results.py
+│       └── batch.py
 │
-├── dsp/          # (optional legacy DSP filters)
-│
-├── inference/
-│   ├── inference_cnn.py          # Predict from spectrogram
-│   └── infer_from_wav.py (future)
-│
-├── augmentation/
+├── cnn_generation/              # (cnn_training in README)
+│   ├── cnn_trainer.ipynb
 │   ├── audio_augmentation.py
-│   ├── overlay_nature.py
-│   └── spectrogram_builder.py
+│   └── generate_spectograms.py
 │
-├── dataset_cnn_specs/            # (not included in repo)
+├── dsp/                         # (optional legacy DSP filters)
+│   ├── frequency.py
+│   ├── rhythm.py
+│   └── spectral_flatness.py
+│
+├── quiet_horizon/
+│   └── inference_cnn.py         # CLI inference tool
+│
+├── dataset_cnn_specs/           # (not included in repo)
 │
 ├── models/
-│   └── quiet_horizon_cnn.keras   # <-- NOT committed. Hosted on HF.
+│   └── quiet_horizon_cnn.keras  # <-- NOT committed. Hosted on HF.
 │
 └── README.md
 ```
 
 ## 🚀 Getting Started
 
-### 1. Install dependencies
+### Option 1: Web Interface (Recommended) 🌐
+
+The easiest way to use QuietHorizon is through the Streamlit web interface:
+
+```bash
+cd frontendtensorflow librosa numpy pillow huggingface-hub
+```
+
+#```
+
+Or use the startup scripts:
+- **Windows**: `run.bat`
+- **Unix/Mac**: `./run.sh`
+
+The web app provides:
+- 🎵 Single file classification with visualizations
+- 📦 Batch processing with CSV export
+- 📊 Rich analytics and probability gauges
+- 🔊 Audio playback and waveform display
+
+See [frontend/README.md](../frontend/README.md) for detailed documentation.
+
+### Option 2: Python API
+#
+#### 1. Install dependencies
 
 ```bash
 python -m venv venv
