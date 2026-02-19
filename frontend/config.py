@@ -27,6 +27,7 @@ HIGH_CONFIDENCE_THRESHOLD = 0.85  # For highlighting high-confidence predictions
 # UI Settings
 MAX_FILE_SIZE_MB = 50
 SUPPORTED_AUDIO_FORMATS = ["wav", "mp3", "ogg", "flac", "m4a"]
+SUPPORTED_FORMATS = SUPPORTED_AUDIO_FORMATS  # Alias for backward compatibility
 BATCH_PROCESSING_LIMIT = 100
 
 # Color scheme

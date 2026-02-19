@@ -1,4 +1,4 @@
-"""
+"""  
 Batch processing component for QuietHorizon
 """
 import streamlit as st
@@ -6,6 +6,11 @@ import pandas as pd
 from utils.audio_processor import process_audio_file, validate_audio_file
 from utils.model_loader import predict_from_spectrogram
 from utils.visualization import plot_batch_results
+import sys
+from pathlib import Path
+
+# Add frontend to path for config import
+sys.path.insert(0, str(Path(__file__).parent.parent))
 import config
 
 

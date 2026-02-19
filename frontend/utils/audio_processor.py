@@ -1,68 +1,46 @@
 """
-Audio processing utilities for QuietHorizon
+Audio processing utilities for QuietHorizon Frontend
+
+This module provides a thin wrapper around the shared preprocessing pipeline
+with additional frontend-specific utilities like validation.
 """
+import sys
+from pathlib import Path
+
+# Add parent directory to path to import quiet_horizon
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 import numpy as np
-import librosa
 import librosa.display
-from PIL import Image
-import io
+
+# Import from shared audio preprocessing module
+from quiet_horizon.audio import (
+    audio_to_spectrogram,
+    load_audio,
+    create_mel_spectrogram,
+    spectrogram_to_image,
+)
+
+# Add frontend to path for config import
+sys.path.insert(0, str(Path(__file__).parent.parent))
 import config
 
 
-def load_audio(audio_file, target_sr=None):
-    """
-    Load audio file and convert to target sample rate.
-    
-    Args:
-        audio_file: File path or file-like object
-        target_sr: Target sample rate (default from config)
-    
-    Returns:
-        tuple: (audio_data, sample_rate)
-    """
-    if target_sr is None:
-        target_sr = config.TARGET_SAMPLE_RATE
-    
-    try:
-        # Load audio
-        y, sr = librosa.load(audio_file, sr=target_sr)
-        return y, sr
-    except Exception as e:
-        raise ValueError(f"Error loading audio file: {e}")
-
-
-def create_mel_spectrogram(audio_data, sample_rate=None):
-    """
-    Create mel-spectrogram from audio data.
-    
-    Args:
-        audio_data: Audio time series
-        sample_rate: Sample rate of audio
-    
-    Returns:
-        Mel-spectrogram as numpy array
-    """
-    if sample_rate is None:
-        sample_rate = config.TARGET_SAMPLE_RATE
-    
-    # Generate mel-spectrogram
-    mel_spec = librosa.feature.melspectrogram(
-        y=audio_data,
-        sr=sample_rate,
-        n_mels=config.N_MELS,
-        n_fft=config.N_FFT,
-        hop_length=config.HOP_LENGTH
-    )
-    
-    # Convert to dB scale
-    mel_spec_db = librosa.power_to_db(mel_spec, ref=np.max)
-    
-    return mel_spec_db
+# Re-export shared functions for backward compatibility
+__all__ = [
+    "load_audio",
+    "create_mel_spectrogram", 
+    "save_spectrogram_image",
+    "process_audio_file",
+    "validate_audio_file",
+]
 
 
 def save_spectrogram_image(mel_spec_db, output_size=None):
     """
     Convert mel-spectrogram to RGB image suitable for CNN input.
+    
+    Wrapper around shared spectrogram_to_image function.
     
     Args:
         mel_spec_db: Mel-spectrogram in dB scale
@@ -74,28 +52,14 @@ def save_spectrogram_image(mel_spec_db, output_size=None):
     if output_size is None:
         output_size = config.SPECTROGRAM_SIZE
     
-    # Normalize to 0-255 range
-    spec_norm = ((mel_spec_db - mel_spec_db.min()) / 
-                 (mel_spec_db.max() - mel_spec_db.min()) * 255).astype(np.uint8)
-    
-    # Convert to PIL Image
-    img = Image.fromarray(spec_norm)
-    
-    # Resize to target size
-    img = img.resize(output_size, Image.Resampling.LANCZOS)
-    
-    # Convert to RGB (3 channels)
-    img_rgb = img.convert('RGB')
-    
-    # Convert to numpy array
-    img_array = np.array(img_rgb)
-    
-    return img_array
+    return spectrogram_to_image(mel_spec_db, output_size)
 
 
 def process_audio_file(audio_file):
     """
     Complete pipeline: audio file -> spectrogram image suitable for CNN.
+    
+    Uses the shared preprocessing pipeline to ensure consistency with CLI.
     
     Args:
         audio_file: File path or file-like object
@@ -103,42 +67,63 @@ def process_audio_file(audio_file):
     Returns:
         dict with audio_data, sample_rate, mel_spectrogram, and spectrogram_image
     """
-    # Load audio
-    audio_data, sr = load_audio(audio_file)
-    
-    # Create mel-spectrogram
-    mel_spec = create_mel_spectrogram(audio_data, sr)
-    
-    # Convert to image
-    spec_image = save_spectrogram_image(mel_spec)
-    
-    return {
-        "audio_data": audio_data,
-        "sample_rate": sr,
-        "mel_spectrogram": mel_spec,
-        "spectrogram_image": spec_image,
-        "duration": len(audio_data) / sr
-    }
+    # Use canonical preprocessing with metadata
+    return audio_to_spectrogram(
+        audio_file,
+        target_sr=config.TARGET_SAMPLE_RATE,
+        n_mels=config.N_MELS,
+        n_fft=config.N_FFT,
+        hop_length=config.HOP_LENGTH,
+        output_size=config.SPECTROGRAM_SIZE,
+        return_metadata=True
+    )
 
 
-def validate_audio_file(uploaded_file):
+def validate_audio_file(filename, file_size=None, uploaded_file=None):
     """
-    Validate uploaded audio file.
+    Validate audio file by filename, size, or Streamlit UploadedFile object.
     
     Args:
-        uploaded_file: Streamlit UploadedFile object
+        filename: File name (str) or Streamlit UploadedFile object
+        file_size: File size in bytes (optional, required if filename is str)
+        uploaded_file: Streamlit UploadedFile object (deprecated, use filename)
     
     Returns:
-        tuple: (is_valid, error_message)
+        dict: {"valid": bool, "error": str or None}
     """
-    # Check file size
-    file_size_mb = uploaded_file.size / (1024 * 1024)
-    if file_size_mb > config.MAX_FILE_SIZE_MB:
-        return False, f"File too large ({file_size_mb:.1f} MB). Maximum size: {config.MAX_FILE_SIZE_MB} MB"
+    # Handle legacy uploaded_file parameter
+    if uploaded_file is not None:
+        filename = uploaded_file.name
+        file_size = uploaded_file.size
+    
+    # Handle case where filename is actually an UploadedFile object
+    if hasattr(filename, 'name') and hasattr(filename, 'size'):
+        file_size = filename.size
+        filename = filename.name
+    
+    # Validate filename
+    if not filename or filename.strip() == '':
+        return {"valid": False, "error": "Empty filename"}
     
     # Check file extension
-    file_extension = uploaded_file.name.split('.')[-1].lower()
+    if '.' not in filename:
+        return {"valid": False, "error": "No file extension found"}
+    
+    file_extension = filename.split('.')[-1].lower()
     if file_extension not in config.SUPPORTED_AUDIO_FORMATS:
-        return False, f"Unsupported format: .{file_extension}. Supported: {', '.join(config.SUPPORTED_AUDIO_FORMATS)}"
+        return {"valid": False, "error": f"Unsupported format: .{file_extension}. Supported: {', '.join(config.SUPPORTED_AUDIO_FORMATS)}"}
+    
+    # Check file size if provided
+    if file_size is not None:
+        if file_size == 0:
+            return {"valid": False, "error": "File is empty (0 bytes)"}
+        
+        file_size_mb = file_size / (1024 * 1024)
+        max_size_mb = config.MAX_FILE_SIZE_MB
+        
+        if file_size_mb > max_size_mb:
+            return {"valid": False, "error": f"File too large ({file_size_mb:.1f} MB). Maximum size: {max_size_mb} MB"}
+    
+    return {"valid": True, "error": None}
     
     return True, None

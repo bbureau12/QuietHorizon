@@ -4,6 +4,11 @@ Visualization utilities for QuietHorizon frontend
 import matplotlib.pyplot as plt
 import librosa.display
 import numpy as np
+import sys
+from pathlib import Path
+
+# Add frontend to path for config import
+sys.path.insert(0, str(Path(__file__).parent.parent))
 import config
 
 

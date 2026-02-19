@@ -10,6 +10,8 @@ from pathlib import Path
 
 # Add parent directory to path to import quiet_horizon modules if needed
 sys.path.append(str(Path(__file__).parent.parent))
+# Add frontend directory to path for local imports
+sys.path.insert(0, str(Path(__file__).parent))
 
 import config
 from utils import (

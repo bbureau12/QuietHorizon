@@ -4,13 +4,13 @@ import os
 import sys
 from typing import Dict
 
-import cnn_generation.audio_standardizer as audio_standardizer
-import librosa
-import cv2 
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+
+# Import shared audio preprocessing
+from quiet_horizon.audio import audio_to_spectrogram
 
 # Must match training setup
 IMG_SIZE = (128, 128)
@@ -18,37 +18,18 @@ CLASS_NAMES = ["anthro", "nature"]  # 0=anthro, 1=nature
 
 def load_melspec_from_audio(path: str) -> np.ndarray:
     """
-    Load raw audio (wav/mp3/flac/ogg), standardize it for CNN,
-    compute mel-spectrogram, and return a CNN-ready image array.
+    Load raw audio (wav/mp3/flac/ogg), compute mel-spectrogram,
+    and return a CNN-ready image array.
+
+    Uses the canonical preprocessing pipeline from quiet_horizon.audio.
 
     Output shape: (1, 128, 128, 3)
     """
-    # 1. Standardize audio
-    y, sr = audio_standardizer.load_and_standardize(path)
-
-    # 2. Compute mel-spectrogram (must match training!)
-    S = librosa.feature.melspectrogram(
-        y=y,
-        sr=sr,
-        n_fft=2048,
-        hop_length=512,
-        n_mels=128,
-        power=2.0,
-    )
-    S = librosa.power_to_db(S, ref=np.max)
-
-    # Normalize 0–255 for CNN image input
-    S_norm = 255 * (S - S.min()) / (S.max() - S.min())
-    S_norm = S_norm.astype(np.uint8)
-
-    # Resize to (128,128) if necessary
-    img = cv2.resize(S_norm, (128, 128))
-
-    # Convert to RGB (stack 3 channels)
-    img_rgb = np.stack([img, img, img], axis=-1)
-
-    # Add batch dimension
-    return np.expand_dims(img_rgb, axis=0)
+    # Use shared preprocessing pipeline
+    img = audio_to_spectrogram(path)
+    
+    # Add batch dimension for model input
+    return np.expand_dims(img, axis=0)
 
 
 def predict_audio(model: keras.Model, audio_path: str, threshold: float = 0.5):

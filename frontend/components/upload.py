@@ -1,8 +1,11 @@
 """
 File upload component for QuietHorizon
 """
-import streamlit as st
-import config
+import streamlit as stimport sys
+from pathlib import Path
+
+# Add frontend to path for config import
+sys.path.insert(0, str(Path(__file__).parent.parent))import config
 
 
 def render_upload_section():

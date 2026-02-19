@@ -5,6 +5,10 @@ import streamlit as st
 from pathlib import Path
 import tensorflow as tf
 from huggingface_hub import hf_hub_download
+import sys
+
+# Add frontend to path for config import
+sys.path.insert(0, str(Path(__file__).parent.parent))
 import config
 
 
@@ -75,12 +79,12 @@ def predict_from_spectrogram(model, spectrogram_image):
     
     # Make prediction
     prediction = model.predict(spectrogram_image, verbose=0)
-    prob_anthro = float(prediction[0][0])
-    prob_nature = 1 - prob_anthro
+    prob_nature = float(prediction[0][0])
+    prob_anthro = 1 - prob_nature
     
     # Determine label
-    predicted_label = "ANTHRO" if prob_anthro >= config.ANTHRO_THRESHOLD else "NATURE"
-    confidence = "HIGH" if max(prob_anthro, prob_nature) >= config.HIGH_CONFIDENCE_THRESHOLD else "MEDIUM"
+    predicted_label = "nature" if prob_nature >= 0.5 else "anthro"
+    confidence = prob_nature if prob_nature >= 0.5 else prob_anthro
     
     return {
         "prob_nature": prob_nature,
