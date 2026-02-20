@@ -42,11 +42,17 @@ class TestLoadAudio:
         with pytest.raises(ValueError, match="Error loading audio file"):
             load_audio("nonexistent_file.wav")
     
-    def test_load_audio_custom_sample_rate(self, tmp_path):
+    def test_load_audio_custom_sample_rate(self, real_nature_audio):
         """Test loading with custom sample rate."""
-        # This would need a real audio file, so we'll skip for now
-        # but demonstrates the test structure
-        pytest.skip("Requires audio file fixture")
+        from quiet_horizon.audio.preprocessing import load_audio
+        
+        # Load with custom sample rate
+        target_sr = 16000
+        y, sr = load_audio(str(real_nature_audio), target_sr=target_sr)
+        
+        assert sr == target_sr
+        assert len(y) > 0
+        assert isinstance(y, np.ndarray)
 
 
 class TestCreateMelSpectrogram:
@@ -161,26 +167,48 @@ class TestSpectrogramToImage:
 class TestAudioToSpectrogram:
     """Tests for complete preprocessing pipeline."""
     
-    def test_pipeline_output_shape(self, sample_audio_array):
+    def test_pipeline_output_shape(self, real_nature_audio):
         """Test that pipeline produces correct output shape."""
-        audio, sr = sample_audio_array
+        from quiet_horizon.audio.preprocessing import audio_to_spectrogram
         
-        # Create a temporary array in memory that librosa can load
-        # For this test, we'll use the direct function on array
-        # In practice, this would use a real audio file
-        pytest.skip("Requires audio file fixture or mock")
+        result = audio_to_spectrogram(str(real_nature_audio), return_metadata=True)
+        spec = result["spectrogram_image"]
+        
+        assert spec.shape == (128, 128, 3)
+        assert spec.dtype == np.uint8
     
-    def test_pipeline_output_dtype(self, sample_audio_array):
+    def test_pipeline_output_dtype(self, real_nature_audio):
         """Test that output is uint8."""
-        pytest.skip("Requires audio file fixture")
+        from quiet_horizon.audio.preprocessing import audio_to_spectrogram
+        
+        result = audio_to_spectrogram(str(real_nature_audio), return_metadata=True)
+        spec = result["spectrogram_image"]
+        
+        assert spec.dtype == np.uint8
+        assert spec.min() >= 0
+        assert spec.max() <= 255
     
-    def test_pipeline_with_metadata(self, sample_audio_array):
+    def test_pipeline_with_metadata(self, real_nature_audio):
         """Test pipeline with metadata return."""
-        pytest.skip("Requires audio file fixture")
+        from quiet_horizon.audio.preprocessing import audio_to_spectrogram
+        
+        result = audio_to_spectrogram(str(real_nature_audio), return_metadata=True)
+        
+        assert "spectrogram_image" in result
+        assert "duration" in result
+        assert "sample_rate" in result
+        assert result["sample_rate"] == 22050
+        assert "mel_spectrogram" in result
+        assert "audio_data" in result
     
-    def test_pipeline_consistency(self, sample_audio_array):
+    def test_pipeline_consistency(self, real_nature_audio):
         """Test that pipeline produces consistent results."""
-        pytest.skip("Requires audio file fixture")
+        from quiet_horizon.audio.preprocessing import audio_to_spectrogram
+        
+        result1 = audio_to_spectrogram(str(real_nature_audio), return_metadata=True)
+        result2 = audio_to_spectrogram(str(real_nature_audio), return_metadata=True)
+        
+        assert np.array_equal(result1["spectrogram_image"], result2["spectrogram_image"])
 
 
 class TestConsistencyBetweenImplementations:

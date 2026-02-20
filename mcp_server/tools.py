@@ -31,19 +31,39 @@ def get_model():
         import tensorflow as tf
         from pathlib import Path
         
-        # Try local model first
-        local_model = Path(__file__).parent.parent / "models" / "quiet_horizon_cnn.keras"
+        # Try local weights file first (like CLI does)
+        local_weights = Path(__file__).parent.parent / "models" / "quiet_horizon_cnn.weights.h5"
         
-        if local_model.exists():
-            _MODEL = tf.keras.models.load_model(str(local_model))
+        if local_weights.exists():
+            # Build model architecture and load weights
+            from quiet_horizon.inference_cnn import build_model
+            _MODEL = build_model()
+            _MODEL.load_weights(str(local_weights))
         else:
-            # Download from HuggingFace
-            from huggingface_hub import hf_hub_download
-            model_path = hf_hub_download(
-                repo_id="bbureau12/QuietHorizon",
-                filename="quiet_horizon_cnn.keras"
-            )
-            _MODEL = tf.keras.models.load_model(model_path)
+            # Try .keras file
+            local_model = Path(__file__).parent.parent / "models" / "quiet_horizon_cnn.keras"
+            if local_model.exists():
+                try:
+                    _MODEL = tf.keras.models.load_model(str(local_model))
+                except Exception as e:
+                    logger.warning(f"Failed to load .keras file: {e}, trying HuggingFace...")
+                    # Download from HuggingFace
+                    from huggingface_hub import hf_hub_download
+                    model_path = hf_hub_download(
+                        repo_id="bbureau12/QuietHorizon",
+                        filename="quiet_horizon_cnn.keras"
+                    )
+                    _MODEL = tf.keras.models.load_model(model_path)
+            else:
+                # Download from HuggingFace
+                from huggingface_hub import hf_hub_download
+                weights_path = hf_hub_download(
+                    repo_id="bbureau12/QuietHorizon",
+                    filename="quiet_horizon_cnn.weights.h5"
+                )
+                from quiet_horizon.inference_cnn import build_model
+                _MODEL = build_model()
+                _MODEL.load_weights(weights_path)
             
     return _MODEL
 
@@ -70,8 +90,8 @@ async def classify_audio_tool(arguments: dict[str, Any]) -> list[TextContent]:
     
     try:
         # Load and preprocess audio
-        spec_data = audio_to_spectrogram(str(file_path))
-        spectrogram = spec_data["spectrogram"]
+        spec_data = audio_to_spectrogram(str(file_path), return_metadata=True)
+        spectrogram = spec_data["spectrogram_image"]
         
         # Run inference
         model = get_model()
@@ -156,8 +176,8 @@ async def batch_classify_tool(arguments: dict[str, Any]) -> list[TextContent]:
     
     for file_path in files:
         try:
-            spec_data = audio_to_spectrogram(str(file_path))
-            spectrogram = spec_data["spectrogram"]
+            spec_data = audio_to_spectrogram(str(file_path), return_metadata=True)
+            spectrogram = spec_data["spectrogram_image"]
             
             prediction = model.predict(np.expand_dims(spectrogram, axis=0), verbose=0)
             prob_nature = float(prediction[0][0])
@@ -254,8 +274,8 @@ async def analyze_soundscape_tool(arguments: dict[str, Any]) -> list[TextContent
         }
         
         # Get classification
-        spec_data = audio_to_spectrogram(str(file_path))
-        spectrogram = spec_data["spectrogram"]
+        spec_data = audio_to_spectrogram(str(file_path), return_metadata=True)
+        spectrogram = spec_data["spectrogram_image"]
         
         model = get_model()
         prediction = model.predict(np.expand_dims(spectrogram, axis=0), verbose=0)

@@ -101,6 +101,33 @@ def temp_audio_dir(tmp_path):
 
 
 @pytest.fixture
+def real_nature_audio():
+    """Path to real nature audio file (Northern Cardinal)."""
+    audio_path = Path(__file__).parent.parent / "quiet_horizon" / "test_data" / "240404__itinerantmonk108__northern-cardinal-closeup.wav"
+    if audio_path.exists():
+        return audio_path
+    pytest.skip(f"Nature audio file not found: {audio_path}")
+
+
+@pytest.fixture
+def real_anthro_audio():
+    """Path to real anthropogenic audio file (Heavy Traffic)."""
+    audio_path = Path(__file__).parent.parent / "quiet_horizon" / "test_data" / "691513__ania635__heavy_traffic_03.wav"
+    if audio_path.exists():
+        return audio_path
+    pytest.skip(f"Anthro audio file not found: {audio_path}")
+
+
+@pytest.fixture
+def test_audio_files(real_nature_audio, real_anthro_audio):
+    """Dictionary of test audio files."""
+    return {
+        "nature": real_nature_audio,
+        "anthro": real_anthro_audio
+    }
+
+
+@pytest.fixture
 def sample_valid_filenames():
     """List of valid audio filenames."""
     return [
