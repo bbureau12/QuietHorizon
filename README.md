@@ -46,12 +46,27 @@ print(f"Confidence: {result['probability']:.2%}")
 python -m quiet_horizon.inference_cnn path/to/audio.wav
 ```
 
+### Option 4: Model Context Protocol (MCP)
+
+Connect AI assistants like Claude Desktop to QuietHorizon:
+
+```bash
+# Configure in Claude Desktop
+# See mcp_server/README.md for setup
+
+# Then in Claude:
+"Classify all audio files in my recordings folder"
+```
+
+Full documentation: [mcp_server/README.md](mcp_server/README.md)
+
 ---
 
 ## 📖 What's Inside
 
 - **CNN Classifier**: Binary classification (Nature vs Anthropogenic) using mel-spectrogram images
 - **Web Interface**: Streamlit app with visualizations and batch processing
+- **MCP Server**: AI assistant integration (Claude Desktop, Cline, automation)
 - **Training Pipeline**: Data augmentation, spectrogram generation, model training
 - **CLI Tools**: Command-line inference and utilities
 - **Comprehensive Docs**: Architecture Decision Records, API docs, deployment guides
@@ -71,6 +86,11 @@ QuietHorizon/
 │   ├── app.py            # Main web app
 │   ├── utils/            # Audio processing, visualization
 │   └── components/       # UI components
+│
+├── mcp_server/           # Model Context Protocol integration
+│   ├── server.py         # MCP server for AI assistants
+│   ├── tools.py          # Tool implementations
+│   └── resources.py      # Resource providers
 │
 ├── models/               # Pretrained models (download from HF)
 ├── docs/
