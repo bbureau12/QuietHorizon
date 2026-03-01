@@ -66,12 +66,12 @@ def process_batch(model, uploaded_files):
         
         try:
             # Validate file
-            is_valid, error_msg = validate_audio_file(uploaded_file)
-            if not is_valid:
+            validation = validate_audio_file(uploaded_file)
+            if not validation["valid"]:
                 results.append({
                     'filename': uploaded_file.name,
                     'status': 'Error',
-                    'error': error_msg,
+                    'error': validation["error"],
                     'predicted_label': None,
                     'prob_nature': None,
                     'prob_anthro': None,
@@ -137,12 +137,14 @@ def display_batch_results(results):
         success_count = (df['status'] == 'Success').sum()
         st.metric("Successful", success_count)
     
+    normalized_labels = df['predicted_label'].fillna('').astype(str).str.lower()
+
     with col3:
-        nature_count = (df['predicted_label'] == 'NATURE').sum()
+        nature_count = (normalized_labels == 'nature').sum()
         st.metric("Nature", nature_count)
     
     with col4:
-        anthro_count = (df['predicted_label'] == 'ANTHRO').sum()
+        anthro_count = (normalized_labels == 'anthro').sum()
         st.metric("Anthropogenic", anthro_count)
     
     # Visualizations (only for successful predictions)

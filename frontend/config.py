@@ -7,7 +7,9 @@ from pathlib import Path
 # Project paths
 PROJECT_ROOT = Path(__file__).parent.parent
 MODELS_DIR = PROJECT_ROOT / "models"
-DEFAULT_MODEL_PATH = MODELS_DIR / "quiet_horizon_cnn.keras"
+DEFAULT_WEIGHTS_PATH = MODELS_DIR / "quiet_horizon_cnn.weights.h5"
+DEFAULT_KERAS_PATH = MODELS_DIR / "quiet_horizon_cnn.keras"
+DEFAULT_MODEL_PATH = DEFAULT_WEIGHTS_PATH if DEFAULT_WEIGHTS_PATH.exists() else DEFAULT_KERAS_PATH
 
 # Hugging Face model repository
 HF_REPO_ID = "bbureau12/QuietHorizon"

@@ -1,20 +1,28 @@
 @echo off
 REM QuietHorizon Frontend Startup Script for Windows
 
+set SCRIPT_DIR=%~dp0
+set ROOT_DIR=%SCRIPT_DIR%..
+
 echo Starting QuietHorizon Frontend...
 echo.
 
-REM Check if virtual environment exists
-if not exist "venv\" (
-    echo No virtual environment found.
-    echo Creating virtual environment...
-    python -m venv venv
+REM Prefer root project virtual environment for model compatibility.
+if exist "%ROOT_DIR%\venv\Scripts\activate.bat" (
+    echo Activating root virtual environment...
+    call "%ROOT_DIR%\venv\Scripts\activate.bat"
+) else (
+    echo Root virtual environment not found.
+    echo Falling back to frontend virtual environment...
+    if not exist "%SCRIPT_DIR%venv\Scripts\activate.bat" (
+        echo Creating frontend virtual environment...
+        python -m venv "%SCRIPT_DIR%venv"
+    )
+    call "%SCRIPT_DIR%venv\Scripts\activate.bat"
     echo.
 )
 
-REM Activate virtual environment
-echo Activating virtual environment...
-call venv\Scripts\activate.bat
+cd /d "%SCRIPT_DIR%"
 
 REM Install/update dependencies
 echo Checking dependencies...
