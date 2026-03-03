@@ -26,6 +26,8 @@ Each ADR follows this structure:
 | [004](004-huggingface-model-hosting.md) | HuggingFace Hub for Model Distribution | Accepted |
 | [005](005-mel-spectrogram-preprocessing.md) | Mel-Spectrogram Audio Preprocessing | Accepted |
 | [006](006-binary-classification-approach.md) | Binary Classification (Nature vs Anthropogenic) | Accepted |
+| [007](ADR-007-mcp-server-implementation.md) | MCP Server Implementation | Accepted |
+| [008](008-scripted-model-evaluation-and-adr-first-change-tracking.md) | Scripted Model Evaluation and ADR-First Change Tracking | Accepted |
 
 ## Creating New ADRs
 

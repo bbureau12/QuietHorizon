@@ -64,6 +64,7 @@ Repository = "https://github.com/yourusername/QuietHorizon"
 
 [project.scripts]
 quiet-horizon = "quiet_horizon.cli:main"
+quiet-horizon-eval = "quiet_horizon.evaluation.evaluate_cnn:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

@@ -1,0 +1,32 @@
+{
+  "summary": {
+    "total_samples": 1,
+    "evaluated_samples": 1,
+    "failed_samples": 0,
+    "threshold_nature": 0.5
+  },
+  "metrics": {
+    "accuracy": 1.0,
+    "precision_anthro": 0.0,
+    "recall_anthro": 0.0,
+    "f1_anthro": 0.0,
+    "roc_auc_anthro": null
+  },
+  "confusion_matrix_anthro": {
+    "tp": 0,
+    "tn": 1,
+    "fp": 0,
+    "fn": 0
+  },
+  "failed_files": [],
+  "predictions": [
+    {
+      "path": "D:\\Projects\\QuietHorizon\\quiet_horizon\\test_data\\240404__itinerantmonk108__northern-cardinal-closeup.wav",
+      "true_label": "nature",
+      "predicted_label": "nature",
+      "prob_nature": 0.9061298370361328,
+      "prob_anthro": 0.09387016296386719,
+      "correct": true
+    }
+  ]
+}

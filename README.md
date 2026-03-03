@@ -46,7 +46,18 @@ print(f"Confidence: {result['probability']:.2%}")
 python -m quiet_horizon.inference_cnn path/to/audio.wav
 ```
 
-### Option 4: Model Context Protocol (MCP)
+### Option 4: Evaluation CLI
+
+```bash
+python -m quiet_horizon.evaluation.evaluate_cnn \
+  --dataset-root quiet_horizon/dataset_cnn \
+  --recursive \
+  --model-path models/quiet_horizon_cnn.weights.h5
+```
+
+See [docs/evaluation.md](docs/evaluation.md) for manifest format and JSON reports.
+
+### Option 5: Model Context Protocol (MCP)
 
 Connect AI assistants like Claude Desktop to QuietHorizon:
 
@@ -181,6 +192,7 @@ pip install -e .[dev]  # Includes pytest, black, ruff
 - **[Quick Start Guide](frontend/QUICKSTART.md)**: Get up and running in 5 minutes
 - **[Architecture](frontend/ARCHITECTURE.md)**: Technical architecture details
 - **[ADRs](docs/adr/)**: Architecture Decision Records
+- **[Evaluation CLI](docs/evaluation.md)**: Reproducible model evaluation workflow
 - **[Code Review](docs/CODE_REVIEW.md)**: Development recommendations
 - **[Main README](quiet_horizon/README.md)**: Detailed project documentation
 

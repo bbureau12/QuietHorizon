@@ -159,6 +159,19 @@ model_path = hf_hub_download(
 model = tf.keras.models.load_model(model_path)
 ```
 
+## 📈 Evaluation
+
+Use the evaluation CLI to benchmark labeled datasets:
+
+```bash
+python -m quiet_horizon.evaluation.evaluate_cnn \
+  --dataset-root quiet_horizon/dataset_cnn \
+  --recursive \
+  --model-path models/quiet_horizon_cnn.weights.h5
+```
+
+For manifest-based evaluation and JSON reports, see [docs/evaluation.md](../docs/evaluation.md).
+
 ## 📦 Repository Structure
 
 ```
