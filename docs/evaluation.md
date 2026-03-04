@@ -13,6 +13,7 @@ QuietHorizon now includes a dedicated evaluation script for labeled audio datase
 - F1 score (anthro)
 - ROC-AUC (anthro)
 - Confusion matrix (`TP`, `FP`, `FN`, `TN`)
+- Confusion matrix PNG image (auto-generated)
 - Per-file predictions
 - Failed files (decode/preprocessing errors)
 
@@ -48,6 +49,14 @@ python -m quiet_horizon.evaluation.evaluate_cnn \
   --output-json reports/eval_report.json
 ```
 
+Write confusion matrix image to a custom location:
+
+```bash
+python -m quiet_horizon.evaluation.evaluate_cnn \
+  --manifest data/eval_manifest.csv \
+  --output-confusion-matrix reports/confusion_matrix.png
+```
+
 Quick smoke evaluation:
 
 ```bash
@@ -68,3 +77,4 @@ quiet-horizon-eval --dataset-root quiet_horizon/dataset_cnn --recursive
 - Threshold is on `P(nature)` (`--threshold`, default `0.5`).
 - Prediction rule: `nature` if `P(nature) >= threshold`, else `anthro`.
 - For metrics, anthro is treated as the positive class.
+- By default, confusion matrix PNG is written to `confusion_matrix.png`.

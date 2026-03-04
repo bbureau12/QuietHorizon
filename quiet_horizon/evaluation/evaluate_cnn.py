@@ -15,6 +15,7 @@ from typing import Any
 
 import numpy as np
 import tensorflow as tf
+from PIL import Image, ImageDraw, ImageFont
 
 from quiet_horizon.audio import audio_to_spectrogram
 from quiet_horizon.inference_cnn import load_model as load_weights_model
@@ -69,6 +70,12 @@ def parse_args() -> argparse.Namespace:
         help="Optional output path for full JSON report.",
     )
     parser.add_argument(
+        "--output-confusion-matrix",
+        type=Path,
+        default=Path("confusion_matrix.png"),
+        help="PNG output path for confusion matrix image.",
+    )
+    parser.add_argument(
         "--max-files",
         type=int,
         default=None,
@@ -80,6 +87,63 @@ def parse_args() -> argparse.Namespace:
         help="Recursively scan dataset root for audio files.",
     )
     return parser.parse_args()
+
+
+def write_confusion_matrix_image(
+    cm: dict[str, int],
+    output_path: Path,
+) -> None:
+    """Render a simple confusion matrix image as PNG."""
+    width, height = 780, 520
+    margin_left = 170
+    margin_top = 120
+    cell_w = 260
+    cell_h = 160
+
+    img = Image.new("RGB", (width, height), color="white")
+    draw = ImageDraw.Draw(img)
+    font = ImageFont.load_default()
+
+    tp = cm["tp"]
+    fp = cm["fp"]
+    fn = cm["fn"]
+    tn = cm["tn"]
+    total = max(tp + fp + fn + tn, 1)
+
+    # Cells ordered as:
+    # [ TN | FP ]
+    # [ FN | TP ]
+    cells = [
+        ("TN", tn, (212, 245, 214)),  # green-ish
+        ("FP", fp, (255, 224, 224)),  # red-ish
+        ("FN", fn, (255, 224, 224)),  # red-ish
+        ("TP", tp, (212, 245, 214)),  # green-ish
+    ]
+
+    for idx, (name, value, color) in enumerate(cells):
+        row = idx // 2
+        col = idx % 2
+        x0 = margin_left + (col * cell_w)
+        y0 = margin_top + (row * cell_h)
+        x1 = x0 + cell_w
+        y1 = y0 + cell_h
+        draw.rectangle([x0, y0, x1, y1], fill=color, outline="black", width=2)
+        pct = (value / total) * 100.0
+        draw.text((x0 + 16, y0 + 24), f"{name}", fill="black", font=font)
+        draw.text((x0 + 16, y0 + 54), f"Count: {value}", fill="black", font=font)
+        draw.text((x0 + 16, y0 + 84), f"Share: {pct:.1f}%", fill="black", font=font)
+
+    draw.text((margin_left + 120, 36), "QuietHorizon Confusion Matrix", fill="black", font=font)
+    draw.text((margin_left + 28, 90), "Predicted label", fill="black", font=font)
+    draw.text((margin_left + 90, 445), "True label", fill="black", font=font)
+
+    draw.text((margin_left + 95, margin_top - 24), "Nature", fill="black", font=font)
+    draw.text((margin_left + cell_w + 95, margin_top - 24), "Anthro", fill="black", font=font)
+    draw.text((margin_left - 70, margin_top + 70), "Nature", fill="black", font=font)
+    draw.text((margin_left - 70, margin_top + cell_h + 70), "Anthro", fill="black", font=font)
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    img.save(output_path)
 
 
 def normalize_label(raw: str) -> str | None:
@@ -302,6 +366,10 @@ def main() -> None:
     model = load_eval_model(args.model_path)
     report = evaluate_dataset(model=model, samples=samples, threshold=args.threshold)
     print_report(report)
+
+    cm_path = args.output_confusion_matrix
+    write_confusion_matrix_image(report["confusion_matrix_anthro"], cm_path)
+    print(f"\nWrote confusion matrix image to: {cm_path}")
 
     if args.output_json is not None:
         args.output_json.parent.mkdir(parents=True, exist_ok=True)

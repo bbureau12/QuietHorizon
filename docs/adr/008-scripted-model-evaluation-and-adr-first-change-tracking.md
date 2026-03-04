@@ -1,7 +1,7 @@
 # ADR-008: Scripted Model Evaluation and ADR-First Change Tracking
 
 **Status:** Accepted  
-**Date:** 2026-03-03  
+**Date:** 2026-03-04  
 **Deciders:** QuietHorizon Maintainers  
 **Tags:** evaluation, quality, process, adr
 
@@ -31,7 +31,19 @@ At the same time, architecture and process decisions were partially documented a
 - `docs/evaluation.md`
 - README links and usage examples
 
-5. Adopt ADR-first tracking for architecture/process changes:
+5. Automatically generate a confusion matrix image (`.png`) for each evaluation run:
+- Default output: `confusion_matrix.png`
+- Optional override: `--output-confusion-matrix`
+
+6. Integrate evaluation directly into the Streamlit app:
+- Add an `Evaluation` tab in `frontend/app.py`
+- Display metrics, confusion matrix image, JSON report, and failed-file details in-app
+
+7. Add one-click demo evaluation in Streamlit:
+- Evaluate fixed demo files (`Northern Cardinal`, `Heavy Traffic`)
+- Use expected labels (`nature`, `anthro`) to provide a fast validation path
+
+8. Adopt ADR-first tracking for architecture/process changes:
 - Significant workflow, architecture, and model-ops decisions should be captured as ADRs in `docs/adr/`.
 
 ## Consequences
@@ -41,11 +53,15 @@ At the same time, architecture and process decisions were partially documented a
 - Reproducible evaluation results that are easy to rerun and compare.
 - Clear file-level diagnostics for bad/unsupported samples.
 - Faster artifact validation when switching between `.weights.h5` and `.keras` models.
+- Evaluation visibility for non-CLI users via the Streamlit UI.
+- Immediate visual artifact (confusion matrix image) for sharing and reporting.
 - Better long-term project memory through explicit ADR records.
 
 ### Negative Consequences
 
 - Additional maintenance burden for evaluation CLI and docs.
+- Additional frontend complexity and UI testing surface area.
+- Extra output artifact management (report and image files).
 - Slightly more process overhead when introducing significant architectural changes.
 
 ## Alternatives Considered
@@ -65,6 +81,7 @@ Rejected because prior decisions were already captured as ADRs, and inconsistent
 ## References
 
 - `quiet_horizon/evaluation/evaluate_cnn.py`
+- `frontend/app.py`
 - `docs/evaluation.md`
 - `docs/adr/README.md`
 - `docs/adr/ADR-007-mcp-server-implementation.md`

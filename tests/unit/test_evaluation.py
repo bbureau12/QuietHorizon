@@ -1,6 +1,10 @@
 """Unit tests for evaluation script utilities."""
 
-from quiet_horizon.evaluation.evaluate_cnn import compute_roc_auc, normalize_label
+from quiet_horizon.evaluation.evaluate_cnn import (
+    compute_roc_auc,
+    normalize_label,
+    write_confusion_matrix_image,
+)
 
 
 def test_normalize_label_supported_values():
@@ -30,3 +34,11 @@ def test_compute_roc_auc_single_class_returns_none():
     y_true = [1, 1, 1]
     y_score = [0.1, 0.4, 0.9]
     assert compute_roc_auc(y_true, y_score) is None
+
+
+def test_write_confusion_matrix_image(tmp_path):
+    output = tmp_path / "cm.png"
+    cm = {"tp": 7, "tn": 11, "fp": 2, "fn": 3}
+    write_confusion_matrix_image(cm, output)
+    assert output.exists()
+    assert output.stat().st_size > 0

@@ -6,7 +6,9 @@ Detects anthropogenic (human-made) noise in natural soundscapes using deep learn
 """
 import streamlit as st
 import sys
+import json
 from pathlib import Path
+from uuid import uuid4
 
 # Add parent directory to path to import quiet_horizon modules if needed
 sys.path.append(str(Path(__file__).parent.parent))
@@ -24,6 +26,13 @@ from components import (
     render_upload_section,
     render_results_section,
     render_batch_processing,
+)
+from quiet_horizon.evaluation.evaluate_cnn import (
+    Sample,
+    collect_samples_from_dataset_root,
+    collect_samples_from_manifest,
+    evaluate_dataset,
+    write_confusion_matrix_image,
 )
 
 DEMO_TEST_FILES = [
@@ -128,7 +137,9 @@ def main():
         st.stop()
 
     # Main content tabs
-    tab1, tab2, tab3 = st.tabs(["Single File", "Batch Processing", "How It Works"])
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["Single File", "Batch Processing", "How It Works", "Evaluation"]
+    )
 
     with tab1:
         render_single_file_tab(model)
@@ -138,6 +149,9 @@ def main():
 
     with tab3:
         render_info_tab()
+
+    with tab4:
+        render_evaluation_tab(model)
 
 
 def render_single_file_tab(model):
@@ -303,6 +317,174 @@ def render_info_tab():
     with col2:
         st.markdown("#### Anthropogenic Spectrogram Example")
         st.markdown("Harmonic structures from engines, machinery, or tools")
+
+
+def render_evaluation_tab(model):
+    """Render evaluation workflow and confusion matrix display."""
+    st.markdown("## Model Evaluation")
+    st.caption("Run dataset evaluation and generate a confusion matrix image.")
+
+    input_mode = st.radio(
+        "Input Source",
+        ["Dataset Root", "Manifest CSV"],
+        horizontal=True,
+        help="Dataset root infers labels from paths containing 'nature' or 'anthro'.",
+    )
+
+    dataset_root = None
+    manifest_path = None
+    recursive = False
+
+    if input_mode == "Dataset Root":
+        dataset_root = st.text_input(
+            "Dataset Root",
+            value=str(config.PROJECT_ROOT / "quiet_horizon" / "dataset_cnn"),
+        )
+        recursive = st.checkbox("Scan recursively", value=True)
+    else:
+        manifest_path = st.text_input(
+            "Manifest CSV Path",
+            value=str(config.PROJECT_ROOT / "tmp_eval_cardinal.csv"),
+        )
+
+    threshold = st.number_input(
+        "Nature Threshold",
+        min_value=0.0,
+        max_value=1.0,
+        value=0.5,
+        step=0.01,
+    )
+    max_files = st.number_input(
+        "Max Files (0 = no limit)",
+        min_value=0,
+        max_value=1_000_000,
+        value=0,
+        step=1,
+    )
+
+    col_run, col_demo = st.columns(2)
+
+    with col_run:
+        run_eval_clicked = st.button("Run Evaluation", type="primary")
+    with col_demo:
+        run_demo_eval_clicked = st.button("Evaluate Demo Files")
+
+    if run_eval_clicked:
+        with st.spinner("Running evaluation..."):
+            try:
+                samples = []
+                if input_mode == "Dataset Root":
+                    samples = collect_samples_from_dataset_root(
+                        Path(dataset_root), recursive=recursive
+                    )
+                else:
+                    samples = collect_samples_from_manifest(Path(manifest_path))
+
+                if max_files > 0:
+                    samples = samples[:max_files]
+
+                if not samples:
+                    st.error("No labeled samples found for evaluation.")
+                    return
+
+                report = evaluate_dataset(
+                    model=model,
+                    samples=samples,
+                    threshold=float(threshold),
+                )
+
+                cm_path = (
+                    config.PROJECT_ROOT
+                    / "reports"
+                    / f"confusion_matrix_{uuid4().hex[:8]}.png"
+                )
+                write_confusion_matrix_image(
+                    report["confusion_matrix_anthro"],
+                    cm_path,
+                )
+
+                st.success("Evaluation complete.")
+                render_evaluation_results(report, cm_path)
+            except Exception as e:
+                st.error(f"Evaluation failed: {e}")
+                with st.expander("View error details"):
+                    st.exception(e)
+
+    if run_demo_eval_clicked:
+        with st.spinner("Running demo evaluation..."):
+            try:
+                samples = []
+                for item in DEMO_TEST_FILES:
+                    sample_path = item["path"]
+                    if not sample_path.exists():
+                        st.error(f"Missing demo file: {sample_path}")
+                        return
+                    samples.append(
+                        Sample(
+                            path=sample_path.resolve(),
+                            label=item["expected_label"],
+                        )
+                    )
+
+                report = evaluate_dataset(
+                    model=model,
+                    samples=samples,
+                    threshold=float(threshold),
+                )
+
+                cm_path = (
+                    config.PROJECT_ROOT
+                    / "reports"
+                    / f"demo_confusion_matrix_{uuid4().hex[:8]}.png"
+                )
+                write_confusion_matrix_image(
+                    report["confusion_matrix_anthro"],
+                    cm_path,
+                )
+
+                st.success("Demo evaluation complete.")
+                render_evaluation_results(report, cm_path)
+            except Exception as e:
+                st.error(f"Demo evaluation failed: {e}")
+                with st.expander("View error details"):
+                    st.exception(e)
+
+
+def render_evaluation_results(report, cm_path):
+    """Render evaluation metrics and outputs."""
+    summary = report["summary"]
+    metrics = report["metrics"]
+    confusion = report["confusion_matrix_anthro"]
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Evaluated", summary["evaluated_samples"])
+    with col2:
+        st.metric("Accuracy", f"{metrics['accuracy']:.2%}")
+    with col3:
+        st.metric("F1 (Anthro)", f"{metrics['f1_anthro']:.2%}")
+    with col4:
+        roc_auc = metrics["roc_auc_anthro"]
+        st.metric("ROC-AUC (Anthro)", "n/a" if roc_auc is None else f"{roc_auc:.3f}")
+
+    st.markdown("### Confusion Matrix")
+    st.image(str(cm_path), caption=str(cm_path), width="stretch")
+    st.caption(
+        f"TP: {confusion['tp']} | FP: {confusion['fp']} | FN: {confusion['fn']} | TN: {confusion['tn']}"
+    )
+
+    with st.expander("Show Evaluation Report JSON"):
+        st.json(report)
+        st.download_button(
+            "Download JSON Report",
+            data=json.dumps(report, indent=2),
+            file_name="evaluation_report.json",
+            mime="application/json",
+        )
+
+    if report["failed_files"]:
+        with st.expander("Failed Files"):
+            st.write(report["failed_files"])
 
 
 if __name__ == "__main__":
