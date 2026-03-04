@@ -137,8 +137,8 @@ def main():
         st.stop()
 
     # Main content tabs
-    tab1, tab2, tab3, tab4 = st.tabs(
-        ["Single File", "Batch Processing", "How It Works", "Evaluation"]
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(
+        ["Single File", "Batch Processing", "How It Works", "Evaluation", "Model Card"]
     )
 
     with tab1:
@@ -152,6 +152,9 @@ def main():
 
     with tab4:
         render_evaluation_tab(model)
+
+    with tab5:
+        render_model_card_tab()
 
 
 def render_single_file_tab(model):
@@ -485,6 +488,78 @@ def render_evaluation_results(report, cm_path):
     if report["failed_files"]:
         with st.expander("Failed Files"):
             st.write(report["failed_files"])
+
+
+def render_model_card_tab():
+    """Render model card information in-app."""
+    st.markdown("## QuietHorizon Model Card")
+    st.caption("Summary information for responsible model usage.")
+
+    st.markdown("### Model Details")
+    st.markdown(
+        """
+- **Model type**: Binary CNN classifier (Nature vs Anthropogenic)
+- **Input**: 128x128 RGB mel-spectrogram image derived from audio
+- **Output**: Probability of nature class (`P(nature)`), with anthro as `1 - P(nature)`
+- **Primary artifact**: `quiet_horizon_cnn.weights.h5` / `quiet_horizon_cnn.keras`
+- **Hosted model**: https://huggingface.co/bbureau12/QuietHorizon
+"""
+    )
+
+    st.markdown("### Intended Use")
+    st.markdown(
+        """
+- Environmental audio quality filtering
+- Conservation and bioacoustic preprocessing
+- Detecting anthropogenic noise intrusion in recordings
+"""
+    )
+
+    st.markdown("### Out of Scope")
+    st.markdown(
+        """
+- Safety-critical decision making
+- Legal or regulatory enforcement
+- Fine-grained source identification (e.g., exact machine type)
+"""
+    )
+
+    st.markdown("### Training Data Summary")
+    st.markdown(
+        """
+- **Nature class**: Wildlife calls and natural ambience
+- **Anthropogenic class**: Vehicles, machinery, construction-like sources
+- **Approx dataset size**: ~20,000 labeled spectrograms
+- **Augmentation**: Anthro/nature blending used for robustness
+"""
+    )
+
+    st.markdown("### Evaluation Summary")
+    st.markdown(
+        """
+- **Reported performance**: ~95% accuracy, ~0.99 AUC (project documentation)
+- Use the **Evaluation** tab for reproducible, local dataset-specific metrics
+- Confusion matrix generation is supported for each evaluation run
+"""
+    )
+
+    st.markdown("### Known Limitations")
+    st.markdown(
+        """
+- Binary classification only (`nature` vs `anthro`)
+- Performance can vary by recording quality, geography, species mix, and mic setup
+- Cross-version model artifacts (`.keras` vs `.weights.h5`) may behave differently in incompatible TF/Keras environments
+"""
+    )
+
+    st.markdown("### Ethical and Risk Considerations")
+    st.markdown(
+        """
+- Risk of false positives (natural sounds flagged as anthro) and false negatives (missed anthro noise)
+- Should be used as decision support, not sole authority
+- Recommended to validate on representative local data before deployment
+"""
+    )
 
 
 if __name__ == "__main__":

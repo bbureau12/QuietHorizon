@@ -43,7 +43,11 @@ At the same time, architecture and process decisions were partially documented a
 - Evaluate fixed demo files (`Northern Cardinal`, `Heavy Traffic`)
 - Use expected labels (`nature`, `anthro`) to provide a fast validation path
 
-8. Adopt ADR-first tracking for architecture/process changes:
+8. Add a Streamlit `Model Card` tab:
+- Present intended use, data summary, metrics, limitations, and risk guidance in-app
+- Improve discoverability of responsible-usage information for non-CLI users
+
+9. Adopt ADR-first tracking for architecture/process changes:
 - Significant workflow, architecture, and model-ops decisions should be captured as ADRs in `docs/adr/`.
 
 ## Consequences
@@ -55,6 +59,7 @@ At the same time, architecture and process decisions were partially documented a
 - Faster artifact validation when switching between `.weights.h5` and `.keras` models.
 - Evaluation visibility for non-CLI users via the Streamlit UI.
 - Immediate visual artifact (confusion matrix image) for sharing and reporting.
+- Better transparency for model assumptions and limitations via in-app model card content.
 - Better long-term project memory through explicit ADR records.
 
 ### Negative Consequences
@@ -62,6 +67,7 @@ At the same time, architecture and process decisions were partially documented a
 - Additional maintenance burden for evaluation CLI and docs.
 - Additional frontend complexity and UI testing surface area.
 - Extra output artifact management (report and image files).
+- Need to maintain consistency between model card content and evolving model artifacts.
 - Slightly more process overhead when introducing significant architectural changes.
 
 ## Alternatives Considered
