@@ -326,6 +326,10 @@ def render_evaluation_tab(model):
     """Render evaluation workflow and confusion matrix display."""
     st.markdown("## Model Evaluation")
     st.caption("Run dataset evaluation and generate a confusion matrix image.")
+    st.info(
+        "This confusion matrix is computed on the dataset you provide. "
+        "Results depend on labeling quality and class distribution."
+    )
 
     input_mode = st.radio(
         "Input Source",
@@ -457,6 +461,7 @@ def render_evaluation_results(report, cm_path):
     """Render evaluation metrics and outputs."""
     summary = report["summary"]
     metrics = report["metrics"]
+    per_class = report.get("per_class", {})
     confusion = report["confusion_matrix_anthro"]
 
     col1, col2, col3, col4 = st.columns(4)
@@ -469,6 +474,25 @@ def render_evaluation_results(report, cm_path):
     with col4:
         roc_auc = metrics["roc_auc_anthro"]
         st.metric("ROC-AUC (Anthro)", "n/a" if roc_auc is None else f"{roc_auc:.3f}")
+    st.caption(
+        "ROC-AUC shown above is one-vs-rest with anthro as the positive class. "
+        "For benchmarking claims, report this on a held-out test split."
+    )
+
+    st.markdown("### Per-Class Metrics")
+    class_rows = []
+    for class_name in ("anthro", "nature"):
+        class_data = per_class.get(class_name, {})
+        class_rows.append(
+            {
+                "class": class_name,
+                "precision": f"{class_data.get('precision', 0.0):.3f}",
+                "recall": f"{class_data.get('recall', 0.0):.3f}",
+                "f1": f"{class_data.get('f1', 0.0):.3f}",
+                "support": class_data.get("support", 0),
+            }
+        )
+    st.table(class_rows)
 
     st.markdown("### Confusion Matrix")
     st.image(str(cm_path), caption=str(cm_path), width="stretch")
@@ -540,8 +564,37 @@ def render_model_card_tab():
 - **Reported performance**: ~95% accuracy, ~0.99 AUC (project documentation)
 - Use the **Evaluation** tab for reproducible, local dataset-specific metrics
 - Confusion matrix generation is supported for each evaluation run
+- AUC should be interpreted as **ROC-AUC on a held-out test set** with split strategy documented
 """
     )
+
+    st.markdown("### Benchmark Snapshot (dataset_cnn)")
+    benchmark_json = config.PROJECT_ROOT / "reports" / "dataset_cnn_benchmark.json"
+    benchmark_cm = config.PROJECT_ROOT / "reports" / "dataset_cnn_benchmark_cm.png"
+    if benchmark_json.exists():
+        try:
+            report = json.loads(benchmark_json.read_text(encoding="utf-8"))
+            summary = report.get("summary", {})
+            metrics = report.get("metrics", {})
+            st.write(
+                {
+                    "evaluated_samples": summary.get("evaluated_samples"),
+                    "threshold_nature": summary.get("threshold_nature"),
+                    "accuracy": metrics.get("accuracy"),
+                    "roc_auc_anthro": metrics.get("roc_auc_anthro"),
+                }
+            )
+            if benchmark_cm.exists():
+                st.image(str(benchmark_cm), caption=str(benchmark_cm), width="stretch")
+            else:
+                st.caption("No benchmark confusion matrix image found yet.")
+        except Exception as e:
+            st.warning(f"Could not read benchmark snapshot: {e}")
+    else:
+        st.caption(
+            "No precomputed dataset_cnn benchmark found yet. "
+            "Generate one with the evaluation CLI and save it to reports/."
+        )
 
     st.markdown("### Known Limitations")
     st.markdown(
@@ -549,6 +602,16 @@ def render_model_card_tab():
 - Binary classification only (`nature` vs `anthro`)
 - Performance can vary by recording quality, geography, species mix, and mic setup
 - Cross-version model artifacts (`.keras` vs `.weights.h5`) may behave differently in incompatible TF/Keras environments
+"""
+    )
+
+    st.markdown("### Known Tricky Cases")
+    st.markdown(
+        """
+- Wind plus distant highway noise
+- Rain hitting the microphone housing
+- Footsteps on snow
+- Low, persistent HVAC hum
 """
     )
 

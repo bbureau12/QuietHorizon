@@ -8,9 +8,9 @@ QuietHorizon now includes a dedicated evaluation script for labeled audio datase
 ## What It Reports
 
 - Accuracy
-- Precision (anthro as positive class)
-- Recall (anthro as positive class)
-- F1 score (anthro)
+- Precision/Recall/F1 (anthro as positive class)
+- Precision/Recall/F1 for each class (`anthro`, `nature`)
+- Support per class (sample counts)
 - ROC-AUC (anthro)
 - Confusion matrix (`TP`, `FP`, `FN`, `TN`)
 - Confusion matrix PNG image (auto-generated)
@@ -38,6 +38,17 @@ python -m quiet_horizon.evaluation.evaluate_cnn \
   --dataset-root quiet_horizon/dataset_cnn \
   --recursive \
   --model-path models/quiet_horizon_cnn.weights.h5
+```
+
+Generate a precomputed benchmark snapshot for the website:
+
+```bash
+python -m quiet_horizon.evaluation.evaluate_cnn \
+  --dataset-root quiet_horizon/dataset_cnn \
+  --recursive \
+  --model-path models/quiet_horizon_cnn.weights.h5 \
+  --output-json reports/dataset_cnn_benchmark.json \
+  --output-confusion-matrix reports/dataset_cnn_benchmark_cm.png
 ```
 
 Evaluate using a manifest and save JSON output:
@@ -78,3 +89,6 @@ quiet-horizon-eval --dataset-root quiet_horizon/dataset_cnn --recursive
 - Prediction rule: `nature` if `P(nature) >= threshold`, else `anthro`.
 - For metrics, anthro is treated as the positive class.
 - By default, confusion matrix PNG is written to `confusion_matrix.png`.
+- ROC-AUC in reports is one-vs-rest with anthro as positive class.
+- For public claims, prefer reporting ROC-AUC on a held-out test set with split strategy documented.
+- Confusion matrix quality depends on your dataset labels and class distribution.

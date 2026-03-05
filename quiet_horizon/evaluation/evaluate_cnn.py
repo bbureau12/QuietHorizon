@@ -293,12 +293,29 @@ def evaluate_dataset(
     f1 = safe_div(2 * precision * recall, precision + recall)
     roc_auc = compute_roc_auc(y_true_anthro, y_score_anthro)
 
+    # Nature as positive class for per-class metrics.
+    tp_nature = tn
+    fp_nature = fn
+    fn_nature = fp
+    support_anthro = tp + fn
+    support_nature = tp_nature + fn_nature
+    precision_nature = safe_div(tp_nature, tp_nature + fp_nature)
+    recall_nature = safe_div(tp_nature, tp_nature + fn_nature)
+    f1_nature = safe_div(
+        2 * precision_nature * recall_nature, precision_nature + recall_nature
+    )
+
     return {
         "summary": {
             "total_samples": len(samples),
             "evaluated_samples": total,
             "failed_samples": len(failed_files),
             "threshold_nature": threshold,
+            "dataset_note": (
+                "Metrics are computed on the provided dataset/manifest and depend on "
+                "label quality and class distribution."
+            ),
+            "auc_note": "ROC-AUC is computed one-vs-rest with anthro as positive class.",
         },
         "metrics": {
             "accuracy": accuracy,
@@ -306,6 +323,20 @@ def evaluate_dataset(
             "recall_anthro": recall,
             "f1_anthro": f1,
             "roc_auc_anthro": roc_auc,
+        },
+        "per_class": {
+            "anthro": {
+                "precision": precision,
+                "recall": recall,
+                "f1": f1,
+                "support": support_anthro,
+            },
+            "nature": {
+                "precision": precision_nature,
+                "recall": recall_nature,
+                "f1": f1_nature,
+                "support": support_nature,
+            },
         },
         "confusion_matrix_anthro": {
             "tp": tp,
@@ -321,6 +352,7 @@ def evaluate_dataset(
 def print_report(report: dict[str, Any]) -> None:
     summary = report["summary"]
     metrics = report["metrics"]
+    per_class = report["per_class"]
     cm = report["confusion_matrix_anthro"]
 
     print("\nQuietHorizon Evaluation Report")
@@ -329,6 +361,7 @@ def print_report(report: dict[str, Any]) -> None:
     print(f"Samples evaluated:       {summary['evaluated_samples']}")
     print(f"Samples failed:          {summary['failed_samples']}")
     print(f"Nature threshold:        {summary['threshold_nature']:.2f}")
+    print(f"Dataset note:            {summary['dataset_note']}")
 
     print("\nMetrics (anthro as positive class)")
     print(f"Accuracy:                {metrics['accuracy']:.4f}")
@@ -337,6 +370,23 @@ def print_report(report: dict[str, Any]) -> None:
     print(f"F1 (anthro):             {metrics['f1_anthro']:.4f}")
     roc_auc = metrics["roc_auc_anthro"]
     print(f"ROC-AUC (anthro):        {roc_auc:.4f}" if roc_auc is not None else "ROC-AUC (anthro):        n/a")
+    print(f"AUC note:                {summary['auc_note']}")
+
+    print("\nPer-class metrics")
+    print(
+        "Anthro -> "
+        f"P: {per_class['anthro']['precision']:.4f}  "
+        f"R: {per_class['anthro']['recall']:.4f}  "
+        f"F1: {per_class['anthro']['f1']:.4f}  "
+        f"Support: {per_class['anthro']['support']}"
+    )
+    print(
+        "Nature -> "
+        f"P: {per_class['nature']['precision']:.4f}  "
+        f"R: {per_class['nature']['recall']:.4f}  "
+        f"F1: {per_class['nature']['f1']:.4f}  "
+        f"Support: {per_class['nature']['support']}"
+    )
 
     print("\nConfusion Matrix (anthro positive)")
     print(f"TP: {cm['tp']}  FP: {cm['fp']}")

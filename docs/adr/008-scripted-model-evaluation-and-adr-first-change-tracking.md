@@ -47,7 +47,13 @@ At the same time, architecture and process decisions were partially documented a
 - Present intended use, data summary, metrics, limitations, and risk guidance in-app
 - Improve discoverability of responsible-usage information for non-CLI users
 
-9. Adopt ADR-first tracking for architecture/process changes:
+9. Expand evaluation interpretation guidance:
+- Include per-class precision, recall, F1, and support alongside confusion matrix
+- Explicitly label AUC as ROC-AUC with anthro as positive class
+- Add data-leakage/label-quality caveat for custom dataset evaluation
+- Document known tricky failure cases (e.g., wind+highway, rain on mic, footsteps on snow, HVAC hum)
+
+10. Adopt ADR-first tracking for architecture/process changes:
 - Significant workflow, architecture, and model-ops decisions should be captured as ADRs in `docs/adr/`.
 
 ## Consequences
@@ -60,6 +66,7 @@ At the same time, architecture and process decisions were partially documented a
 - Evaluation visibility for non-CLI users via the Streamlit UI.
 - Immediate visual artifact (confusion matrix image) for sharing and reporting.
 - Better transparency for model assumptions and limitations via in-app model card content.
+- Better interpretability of model behavior via per-class error profile visibility.
 - Better long-term project memory through explicit ADR records.
 
 ### Negative Consequences
@@ -68,6 +75,7 @@ At the same time, architecture and process decisions were partially documented a
 - Additional frontend complexity and UI testing surface area.
 - Extra output artifact management (report and image files).
 - Need to maintain consistency between model card content and evolving model artifacts.
+- More documentation upkeep for metric definitions and caveats.
 - Slightly more process overhead when introducing significant architectural changes.
 
 ## Alternatives Considered
