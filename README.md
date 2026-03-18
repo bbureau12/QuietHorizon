@@ -198,6 +198,26 @@ pip install -e .[dev]  # Includes pytest, black, ruff
 
 ---
 
+## 🌐 GitHub Pages
+
+The static site in `docs/` can be published automatically with GitHub Pages.
+
+1. Push the `docs/` files and `.github/workflows/pages.yml` to `main`.
+2. In GitHub, open `Settings` → `Pages`.
+3. Under `Source`, choose `GitHub Actions`.
+
+After that, every push to `main` that changes `docs/` will deploy the site automatically.
+
+The page will be available at:
+
+```text
+https://<your-github-username>.github.io/QuietHorizon/
+```
+
+Before publishing, update `docs/app.js` so `API_ENDPOINT` points at your live inference API.
+
+---
+
 ## 🛠️ Development
 
 ### Running Tests
