@@ -8,6 +8,8 @@
 
 QuietHorizon is a machine-learning system designed to identify anthropogenic (human-made) noise in nature recordings. It supports environmental research, bioacoustics, and conservation work by enabling automated filtering of noisy audio.
 
+**Live demo**: https://bbureau12.github.io/QuietHorizon/
+
 **Model Performance**: 95% accuracy | 0.99 AUC | ~4 MB model size
 
 ---
@@ -209,10 +211,10 @@ It is designed as a transparent sample-based demo, not a live hosted inference s
 
 After that, every push to `main` that changes `docs/` will deploy the site automatically.
 
-The page will be available at:
+The live page is available at:
 
 ```text
-https://<your-github-username>.github.io/QuietHorizon/
+https://bbureau12.github.io/QuietHorizon/
 ```
 
 The public page replays stored results for bundled repository samples.
