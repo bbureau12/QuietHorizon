@@ -201,6 +201,7 @@ pip install -e .[dev]  # Includes pytest, black, ruff
 ## 🌐 GitHub Pages
 
 The static site in `docs/` can be published automatically with GitHub Pages.
+It is designed as a transparent sample-based demo, not a live hosted inference service.
 
 1. Push the `docs/` files and `.github/workflows/pages.yml` to `main`.
 2. In GitHub, open `Settings` → `Pages`.
@@ -214,7 +215,8 @@ The page will be available at:
 https://<your-github-username>.github.io/QuietHorizon/
 ```
 
-Before publishing, update `docs/app.js` so `API_ENDPOINT` points at your live inference API.
+The public page replays stored results for bundled repository samples.
+For custom audio, users should clone the repository and run the Streamlit app or CLI locally.
 
 ---
 

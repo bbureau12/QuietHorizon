@@ -1,0 +1,13 @@
+{
+  "sample_id": "traffic",
+  "sample_title": "Heavy Traffic",
+  "source_file": "quiet_horizon/test_data/691513__ania635__heavy_traffic_03.wav",
+  "predicted_label": "anthro",
+  "prob_nature": 0.05165955051779747,
+  "prob_anthro": 0.9483404494822025,
+  "confidence": 0.9483404494822025,
+  "mode": "precomputed-demo",
+  "generated_with": "QuietHorizon local inference",
+  "model_path": "models/quiet_horizon_cnn.weights.h5",
+  "notes": "Stored demo result for the GitHub Pages site. This page does not run the model live."
+}

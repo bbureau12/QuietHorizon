@@ -28,6 +28,7 @@ Each ADR follows this structure:
 | [006](006-binary-classification-approach.md) | Binary Classification (Nature vs Anthropogenic) | Accepted |
 | [007](ADR-007-mcp-server-implementation.md) | MCP Server Implementation | Accepted |
 | [008](008-scripted-model-evaluation-and-adr-first-change-tracking.md) | Scripted Model Evaluation and ADR-First Change Tracking | Accepted |
+| [009](009-static-site-deployment-via-github-pages.md) | Static Site Deployment via GitHub Pages | Accepted |
 
 ## Creating New ADRs
 

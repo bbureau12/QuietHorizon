@@ -1,0 +1,13 @@
+{
+  "sample_id": "cardinal",
+  "sample_title": "Northern Cardinal",
+  "source_file": "quiet_horizon/test_data/240404__itinerantmonk108__northern-cardinal-closeup.wav",
+  "predicted_label": "nature",
+  "prob_nature": 0.9061298370361328,
+  "prob_anthro": 0.09387016296386719,
+  "confidence": 0.9061298370361328,
+  "mode": "precomputed-demo",
+  "generated_with": "QuietHorizon local inference",
+  "model_path": "models/quiet_horizon_cnn.weights.h5",
+  "notes": "Stored demo result for the GitHub Pages site. This page does not run the model live."
+}

@@ -1,0 +1,5 @@
+Test sound effects were found in FreeSound.org and provided under a Creative Commons License.
+
+240404__itinerantmonk108__northern-cardinal-closeup.wav -> cardinal calling, Natural
+
+691513__ania635__heavy_traffic_03.wav -> heavy traffic, anthropogenic

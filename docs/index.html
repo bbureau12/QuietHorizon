@@ -3,155 +3,154 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QuietHorizon – Environmental Audio Classifier</title>
+  <title>QuietHorizon Demo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- ─── Header ─────────────────────────────────────────────── -->
-  <header class="site-header">
+  <header class="hero">
     <div class="container">
-      <div class="logo">
-        <span class="logo-mark">QH</span>
-        <div>
-          <span class="logo-title">QuietHorizon</span>
-          <span class="logo-tagline">Environmental Audio Classifier</span>
-        </div>
-      </div>
-      <p class="header-description">
-        Detecting human noise intrusion in natural soundscapes using deep learning.
+      <p class="eyebrow">QuietHorizon</p>
+      <h1>Static demo for an environmental audio classifier</h1>
+      <p class="hero-copy">
+        This page is a transparent GitHub Pages demo. It does not run the model live in your browser.
+        Instead, it replays two precomputed predictions generated locally from the QuietHorizon model.
       </p>
+      <div class="hero-actions">
+        <a class="primary-link" href="https://github.com/bbureau12/QuietHorizon" target="_blank" rel="noopener">View repository</a>
+        <a class="secondary-link" href="https://huggingface.co/bbureau12/QuietHorizon" target="_blank" rel="noopener">Get model from Hugging Face</a>
+      </div>
     </div>
   </header>
 
-  <!-- ─── Main ──────────────────────────────────────────────── -->
-  <main class="container">
-
-    <!-- Upload card -->
-    <section class="card" id="upload-section">
-      <h2 class="card-title">Upload Audio File</h2>
-      <p class="card-subtitle">
-        Supported formats: WAV, MP3, OGG, FLAC, M4A &nbsp;·&nbsp; Max size: 50 MB
+  <main class="container layout">
+    <section class="panel panel-warning">
+      <h2>What you are seeing</h2>
+      <p>
+        Select one of the bundled recordings below. The site loads a stored JSON result and the matching sample audio
+        file from this repository. That keeps the public demo free, stable, and honest about what is happening.
       </p>
-
-      <div class="drop-zone" id="drop-zone" role="button" tabindex="0"
-           aria-label="Click or drag an audio file here to upload">
-        <svg class="drop-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="1.5"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="17 8 12 3 7 8"/>
-          <line x1="12" y1="3" x2="12" y2="15"/>
-        </svg>
-        <p class="drop-primary">Drag &amp; drop your audio file here</p>
-        <p class="drop-secondary">or <span class="drop-link">browse to choose a file</span></p>
-        <input type="file" id="file-input" accept=".wav,.mp3,.ogg,.flac,.m4a"
-               aria-label="Choose audio file" />
-      </div>
-
-      <!-- Selected-file info bar (hidden until a file is chosen) -->
-      <div class="file-info hidden" id="file-info">
-        <svg xmlns="http://www.w3.org/2000/svg" class="file-icon" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M9 18V5l12-2v13"/>
-          <circle cx="6" cy="18" r="3"/>
-          <circle cx="18" cy="16" r="3"/>
-        </svg>
-        <span id="file-name">filename.wav</span>
-        <span id="file-size" class="file-size-badge"></span>
-        <button class="remove-btn" id="remove-file" aria-label="Remove file">✕</button>
-      </div>
-
-      <!-- Audio preview (hidden until a file is chosen) -->
-      <div class="audio-preview hidden" id="audio-preview">
-        <p class="preview-label">Preview</p>
-        <audio id="audio-player" controls></audio>
-      </div>
-
-      <button class="btn-analyze" id="analyze-btn" disabled>
-        <span id="btn-text">Analyze</span>
-        <span id="btn-spinner" class="spinner hidden" aria-hidden="true"></span>
-      </button>
-
-      <!-- Error banner -->
-      <div class="banner banner-error hidden" id="error-banner" role="alert"></div>
     </section>
 
-    <!-- Results card (hidden until a prediction arrives) -->
-    <section class="card hidden" id="results-section" aria-live="polite">
-      <h2 class="card-title">Prediction Results</h2>
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Interactive demo</p>
+          <h2>Try the two example recordings</h2>
+        </div>
+        <p class="section-note">Precomputed outputs from the repository samples.</p>
+      </div>
 
-      <!-- Verdict -->
+      <div class="sample-grid" id="sample-grid">
+        <button class="sample-card" data-sample-id="cardinal" type="button">
+          <span class="sample-badge nature">Natural</span>
+          <strong>Northern Cardinal</strong>
+          <span>Bird vocalization from the bundled test data.</span>
+        </button>
+
+        <button class="sample-card" data-sample-id="traffic" type="button">
+          <span class="sample-badge anthro">Anthropogenic</span>
+          <strong>Heavy Traffic</strong>
+          <span>Road noise example from the bundled test data.</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="panel hidden" id="results-section" aria-live="polite">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Selected sample</p>
+          <h2 id="result-title">Prediction</h2>
+        </div>
+        <span class="sample-kind" id="result-kind"></span>
+      </div>
+
+      <div class="player-card">
+        <p class="player-label">Sample audio</p>
+        <audio id="audio-player" controls preload="none"></audio>
+      </div>
+
       <div class="verdict" id="verdict">
         <div class="verdict-icon" id="verdict-icon" aria-hidden="true"></div>
         <div>
-          <p class="verdict-label" id="verdict-label">—</p>
+          <p class="verdict-label" id="verdict-label">-</p>
           <p class="verdict-file" id="verdict-file"></p>
         </div>
         <span class="confidence-badge" id="confidence-badge"></span>
       </div>
 
-      <!-- Probability bars -->
       <div class="prob-section">
         <div class="prob-row">
           <span class="prob-name nature">Natural</span>
-          <div class="prob-track" role="progressbar" aria-label="Natural probability"
-               aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+          <div class="prob-track" role="progressbar" aria-label="Natural probability" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
             <div class="prob-fill nature" id="bar-nature"></div>
           </div>
           <span class="prob-pct" id="pct-nature">0%</span>
         </div>
         <div class="prob-row">
           <span class="prob-name anthro">Anthropogenic</span>
-          <div class="prob-track" role="progressbar" aria-label="Anthropogenic probability"
-               aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+          <div class="prob-track" role="progressbar" aria-label="Anthropogenic probability" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
             <div class="prob-fill anthro" id="bar-anthro"></div>
           </div>
           <span class="prob-pct" id="pct-anthro">0%</span>
         </div>
       </div>
 
-      <!-- Raw JSON (collapsible) -->
-      <details class="raw-json">
-        <summary>Raw API response</summary>
-        <pre id="raw-json-pre"></pre>
+      <details class="details-block">
+        <summary>How this demo works</summary>
+        <p>
+          The public page fetches a checked-in JSON file for the selected sample. QuietHorizon itself is run locally
+          or in Python environments, not on GitHub Pages.
+        </p>
       </details>
 
-      <!-- How-it-works -->
-      <details class="explainer">
-        <summary>How does this work?</summary>
-        <p>
-          Your audio is converted to a 128×128 RGB Mel-spectrogram and fed to a
-          convolutional neural network (CNN) trained on labelled soundscape data.
-          The network outputs a probability that the recording is
-          <strong>natural</strong> (birdsong, wind, water, etc.) or
-          <strong>anthropogenic</strong> (traffic, machinery, voices, etc.).
-        </p>
+      <details class="details-block">
+        <summary>Raw stored result</summary>
+        <pre id="raw-json-pre"></pre>
       </details>
     </section>
 
-  </main>
+    <section class="panel panel-guide">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Run it yourself</p>
+          <h2>Use your own files locally</h2>
+        </div>
+      </div>
 
-  <!-- ─── Footer ────────────────────────────────────────────── -->
-  <footer class="site-footer">
-    <div class="container">
       <p>
-        <a href="https://github.com/bbureau12/QuietHorizon" target="_blank" rel="noopener">
-          GitHub
-        </a>
-        &nbsp;·&nbsp;
-        QuietHorizon &copy; 2025
-        &nbsp;·&nbsp;
-        Model hosted on
-        <a href="https://huggingface.co/bbureau12/QuietHorizon" target="_blank" rel="noopener">
-          Hugging Face
-        </a>
+        For custom audio, clone the repository and run the real app or CLI locally. The pretrained model is available
+        from Hugging Face.
       </p>
-    </div>
-  </footer>
+
+      <div class="guide-grid">
+        <div class="guide-card">
+          <h3>Streamlit app</h3>
+          <pre><code>git clone https://github.com/bbureau12/QuietHorizon.git
+cd QuietHorizon
+pip install -e .
+pip install -r frontend/requirements.txt
+streamlit run frontend/app.py</code></pre>
+        </div>
+
+        <div class="guide-card">
+          <h3>CLI inference</h3>
+          <pre><code>git clone https://github.com/bbureau12/QuietHorizon.git
+cd QuietHorizon
+pip install -e .
+python -m quiet_horizon.inference_cnn your-audio.wav --audio</code></pre>
+        </div>
+      </div>
+
+      <p class="guide-links">
+        <a href="https://github.com/bbureau12/QuietHorizon" target="_blank" rel="noopener">Repository</a>
+        <span>|</span>
+        <a href="https://huggingface.co/bbureau12/QuietHorizon" target="_blank" rel="noopener">Model download</a>
+      </p>
+    </section>
+  </main>
 
   <script src="app.js"></script>
 </body>
